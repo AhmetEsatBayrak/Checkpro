@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CheckPro | Ultra Task Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="checkpro.css">
+</head>
+<body class="flex flex-col md:flex-row h-screen theme-dark" id="mainBody">
+
+    <aside class="w-full md:w-80 glass border-r flex flex-col h-full border-white/10 z-10">
+        <div class="p-6 flex justify-between items-center header-text">
+            <h1 class="text-xl font-black italic tracking-tighter">CHECKPRO</h1>
+            <button onclick="openSettings()" class="hover:scale-110 transition-transform p-2 bg-white/5 rounded-lg">
+                <i class="fas fa-sliders-h opacity-70"></i>
+            </button>
+        </div>
+        
+        <div class="px-4 mb-4">
+            <input type="text" id="newListInput" placeholder="+ Yeni Kategori Ekle..." 
+                   class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        </div>
+
+        <nav id="sidebarList" class="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar"></nav>
+
+        <div class="p-4 border-t border-white/5">
+            <button onclick="toggleTrash()" class="w-full flex justify-between p-3 rounded-xl hover:bg-red-500/10 text-[11px] font-bold transition">
+                <span class="trash-text"><i class="fas fa-trash-alt mr-2 opacity-50 text-red-400"></i> GERİ DÖNÜŞÜM</span>
+                <span id="trashCount" class="bg-red-500/20 px-2 py-0.5 rounded text-red-400">0</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-10 relative custom-scrollbar">
+        
+        <div id="noListSelected" class="h-full flex flex-col items-center justify-center opacity-10">
+            <i class="fas fa-check-double text-8xl mb-4"></i>
+            <p class="text-xl font-bold uppercase tracking-widest">Bir Liste Seçin veya Oluşturun</p>
+        </div>
+
+        <div id="mainContent" class="hidden space-y-6">
+            <div class="glass rounded-[2rem] p-8 border-white/10 shadow-2xl">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="flex-1 mr-4">
+                        <div id="titleContainer" class="group cursor-pointer flex items-center gap-3">
+                            <h2 id="currentListTitle" onclick="editListTitle()" class="text-3xl font-black tracking-tighter hover:opacity-80 transition-all">Liste</h2>
+                            <i class="fas fa-pen text-[10px] opacity-0 group-hover:opacity-20 transition-all"></i>
+                        </div>
+                        <input type="text" id="editTitleInput" class="hidden text-3xl font-black tracking-tighter bg-white/5 border border-indigo-500 rounded-xl px-2 outline-none w-full">
+                        <span id="progressText" class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-2 block">0% TAMAM</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="cloneList()" class="p-2 hover:bg-white/10 rounded-lg opacity-40 hover:opacity-100 transition"><i class="fas fa-copy text-xs"></i></button>
+                        <button onclick="deleteList()" class="p-2 hover:bg-red-500/10 rounded-lg text-red-500 transition"><i class="fas fa-trash text-xs"></i></button>
+                    </div>
+                </div>
+                <div class="h-2 w-full bg-black/30 rounded-full overflow-hidden">
+                    <div id="progressBar" class="progress-bar h-full bg-indigo-500 w-0"></div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <div class="flex gap-2">
+                        <input type="text" id="taskInput" placeholder="Sıradaki görev..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 outline-none text-sm focus:border-indigo-500/50">
+                        <button onclick="addTask()" class="bg-indigo-600 px-6 rounded-2xl hover:bg-indigo-500 transition text-white shadow-lg shadow-indigo-500/20"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="taskList" class="space-y-2"></div>
+                </div>
+
+                <div class="glass rounded-[2rem] p-6 border-white/10 h-fit">
+                    <div class="flex justify-between items-center mb-4 px-2">
+                        <h3 class="text-[10px] font-black opacity-30 uppercase tracking-[0.2em]">Tablo Verileri</h3>
+                        <button onclick="addRow()" class="text-indigo-400 font-bold text-[10px] hover:text-indigo-300 transition">+ YENİ SATIR</button>
+                    </div>
+                    <div class="overflow-hidden rounded-2xl bg-black/10 border border-white/5">
+                        <table class="w-full text-xs">
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass rounded-[2rem] p-8 border-white/10 shadow-2xl mt-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-[10px] font-black opacity-30 uppercase tracking-[0.2em]">Görsel Galerisi</h3>
+                    </div>
+                    <label class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/20">
+                        <i class="fas fa-camera mr-2"></i> GÖRSEL EKLE
+                        <input type="file" id="galleryInput" class="hidden" accept="image/*" onchange="handleGalleryUpload(this)">
+                    </label>
+                </div>
+                <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+            </div>
+
+            <div class="glass rounded-[2rem] p-8 border-white/10 shadow-2xl mt-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-[10px] font-black opacity-30 uppercase tracking-[0.2em]">Sayfa Sayfa Notlar</h3>
+                    </div>
+                    <button onclick="addNewNote()" class="bg-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all">
+                        <i class="fas fa-plus mr-2"></i> YENİ SAYFA
+                    </button>
+                </div>
+                <div id="noteTabs" class="flex flex-wrap gap-2 mb-6"></div>
+                <div id="activeNoteContainer" class="hidden space-y-4">
+                    <input type="text" id="noteTitleInput" oninput="updateNoteTitle(this.value)" class="w-full bg-transparent text-lg font-bold outline-none border-b border-white/5 pb-2" placeholder="Not Başlığı...">
+                    <textarea id="listNotes" oninput="updateNoteContent(this.value)" class="w-full h-48 bg-black/10 border border-white/5 rounded-2xl p-6 outline-none text-sm focus:border-indigo-500/30 transition-all custom-scrollbar resize-none" placeholder="Notlarınızı buraya yazın..."></textarea>
+                    <div class="flex justify-end"><button onclick="deleteCurrentNote()" class="text-[9px] font-bold text-red-500 opacity-40 hover:opacity-100 transition">BU SAYFAYI SİL</button></div>
+                </div>
+                <div id="noNotesMessage" class="py-10 text-center opacity-10 text-xs italic">Henüz bir not yok.</div>
+            </div>
+        </div>
+
+        <div id="undoToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 translate-y-20 opacity-0 pointer-events-none transition-all duration-500 z-[200]">
+            <div class="undo-box px-6 py-4 rounded-2xl border flex items-center gap-6 shadow-2xl min-w-[320px]">
+                <div class="flex-1">
+                    <p id="undoMessage" class="undo-title text-[10px] font-black uppercase tracking-tighter">İşlem Geri Alınabilir</p>
+                    <div class="h-1 bg-white/10 w-full mt-2 rounded-full overflow-hidden">
+                        <div id="undoBar" class="h-full bg-indigo-500 w-full"></div>
+                    </div>
+                </div>
+                <button onclick="undoDelete()" class="bg-indigo-600 text-white text-[10px] font-black px-4 py-2 rounded-lg hover:bg-indigo-500 transition-all uppercase">Geri Al</button>
+            </div>
+        </div>
+
+        <div id="settingsModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
+            <div class="glass w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6 border-white/20">
+                <div class="flex justify-between items-center settings-text">
+                    <h2 class="text-xl font-black uppercase tracking-tighter">AYARLAR</h2>
+                    <button onclick="closeSettings()"><i class="fas fa-times opacity-50"></i></button>
+                </div>
+                
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setTheme('theme-dark')" class="h-8 rounded-lg bg-slate-900 border border-white/10"></button>
+                    <button onclick="setTheme('theme-light')" class="h-8 rounded-lg bg-slate-100 border border-black/10"></button>
+                    <button onclick="setTheme('theme-purple')" class="h-8 rounded-lg bg-purple-900 border border-white/10"></button>
+                    <button onclick="setTheme('theme-blue')" class="h-8 rounded-lg bg-sky-900 border border-white/10"></button>
+                </div>
+
+                <div class="space-y-4 border-t border-white/5 pt-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-[10px] font-black opacity-30 uppercase tracking-widest">Ses Kontrolleri</h3>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="soundToggle" onchange="toggleSoundMaster(this.checked)" class="sr-only peer">
+                            <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                    
+                    <div id="soundControls" class="space-y-3 transition-all">
+                        <div class="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5">
+                            <p class="text-[9px] opacity-50 font-bold uppercase">Görev Tamam</p>
+                            <label class="cursor-pointer bg-indigo-600/20 text-indigo-400 px-3 py-1 rounded-lg text-[9px] font-black hover:bg-indigo-600 hover:text-white transition uppercase">
+                                DOSYA SEÇ <input type="file" accept="audio/*" class="hidden" onchange="uploadSound('task', this)">
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5">
+                            <p class="text-[9px] opacity-50 font-bold uppercase">Silme Efekti</p>
+                            <label class="cursor-pointer bg-indigo-600/20 text-indigo-400 px-3 py-1 rounded-lg text-[9px] font-black hover:bg-indigo-600 hover:text-white transition uppercase">
+                                DOSYA SEÇ <input type="file" accept="audio/*" class="hidden" onchange="uploadSound('delete', this)">
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5">
+                            <p class="text-[9px] opacity-50 font-bold uppercase">Liste Bitiş</p>
+                            <label class="cursor-pointer bg-indigo-600/20 text-indigo-400 px-3 py-1 rounded-lg text-[9px] font-black hover:bg-indigo-600 hover:text-white transition uppercase">
+                                DOSYA SEÇ <input type="file" accept="audio/*" class="hidden" onchange="uploadSound('finish', this)">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-4">
+                    <button onclick="resetApp()" class="w-full p-3 rounded-xl bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">TÜMÜNÜ SIFIRLA</button>
+                    <button onclick="closeSettings()" class="w-full p-3 rounded-xl bg-white/5 text-[10px] font-black uppercase tracking-widest">KAPAT</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="lightbox" class="hidden fixed inset-0 z-[300] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out" onclick="closeLightbox()">
+            <img id="lightboxImg" src="" class="max-w-full max-h-full rounded-xl shadow-2xl transition-transform duration-300">
+        </div>
+
+        <div id="trashContent" class="hidden space-y-4">
+            <div class="flex justify-between items-center glass p-6 rounded-2xl">
+                <h2 class="text-xl font-black italic uppercase">Geri Dönüşüm Kutusu</h2>
+                <button onclick="closeTrash()" class="text-[10px] font-bold opacity-50 hover:opacity-100">KAPAT</button>
+            </div>
+            <div id="trashList" class="grid gap-2"></div>
+        </div>
+
+    </main>
+    <script src="checkpro.js"></script>
+</body>
+</html>
